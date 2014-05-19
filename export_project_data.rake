@@ -65,14 +65,14 @@ namespace :project_data do
 			@dir = args[:dir]
 			@file = File.open(@dir + @ident + '.sql', "w")
 			@att_dir = @dir + 'files' + File::SEPARATOR
-			Dir::mkdir @att_dir
+			FileUtils.mkdir_p(@att_dir)
 			ObjectSpace.define_finalizer(self, ProjectData.callback(@file))
 		end
 
 		def export_row(model)
 			values = []
 			model.class.column_names.each {|column_name| values << model.class.connection.quote(model.attributes[column_name])}
-			@file.puts 'INSERT IGNORE INTO `%s` (`%s`) VALUES (%s);' % [
+			@file.puts 'INSERT INTO `%s` (`%s`) VALUES (%s);' % [
 				model.class.table_name.force_encoding('UTF-8'), 
 				model.class.column_names.join('`, `').force_encoding('UTF-8'), 
 				values.join(', ').force_encoding('UTF-8'),
@@ -132,7 +132,9 @@ namespace :project_data do
 		end
 
 		def export_wiki_extensions_votes(polymorphic)
-			export_polymorphics(polymorphic, WikiExtensionsVote, :target, :class_name){|wiki_extensions_votes|}
+			if defined? WikiExtensionsVote
+				export_polymorphics(polymorphic, WikiExtensionsVote, :target, :class_name){|wiki_extensions_votes|}
+			end
 		end
 
 		def export_polymorphic_rerations(model)
@@ -190,12 +192,16 @@ namespace :project_data do
 		end
 
 		def export_code_review_project_settings
-			export_by_project_id(CodeReviewProjectSetting){|code_review_project_setting|}
+			if defined? CodeReviewProjectSetting
+				export_by_project_id(CodeReviewProjectSetting){|code_review_project_setting|}
+			end
 		end
 
 		def export_code_reviews
-			export_by_project_id(CodeReview){|code_review|}
-			export_code_review_project_settings
+			if defined? CodeReview
+				export_by_project_id(CodeReview){|code_review|}
+				export_code_review_project_settings
+			end
 		end
 
 		def export_custom_fields_projects
@@ -231,7 +237,9 @@ namespace :project_data do
 		end
 
 		def export_code_review_assignments(issue)
-			export(CodeReviewAssignment, ["issue_id = ? OR issue_id IS NULL", issue.id]){|code_review_assignment|}
+			if defined? CodeReviewAssignment
+				export(CodeReviewAssignment, ["issue_id = ? OR issue_id IS NULL", issue.id]){|code_review_assignment|}
+			end
 		end
 
 		def export_issues
@@ -247,7 +255,9 @@ namespace :project_data do
 		end
 
 		def export_code_review_user_settings(user)
-			export(CodeReviewUserSetting, {:user_id => user.id}){|code_review_user_setting|}
+			if defined? CodeReviewUserSetting
+				export(CodeReviewUserSetting, {:user_id => user.id}){|code_review_user_setting|}
+			end
 		end
 
 		def export_groups_users(user)
@@ -293,7 +303,9 @@ namespace :project_data do
 		end
 
 		def export_workflows(tracker)
-			export(Workflow, {:tracker_id => tracker.id}){|workflow|}
+			if defined? Workflow
+				export(Workflow, {:tracker_id => tracker.id}){|workflow|}
+			end
 		end
 
 		def export_trackers
@@ -354,7 +366,9 @@ namespace :project_data do
 		end
 
 		def export_wiki_extensions_comments(wiki_page)
-			export(WikiExtensionsComment, {:wiki_page_id => wiki_page.id}){|wiki_extensions_comment|}
+			if defined? WikiExtensionsComment
+				export(WikiExtensionsComment, {:wiki_page_id => wiki_page.id}){|wiki_extensions_comment|}
+			end
 		end
 
 		def export_wiki_pages(wiki)
@@ -391,10 +405,12 @@ namespace :project_data do
 		end
 
 		def export_wiki_extensions
-			export_wiki_extensions_counts
-			export_wiki_extensions_menus
-			export_wiki_extensions_settings
-			export_wiki_extensions_tags
+			if defined? WikiExtensionsComment
+				export_wiki_extensions_counts
+				export_wiki_extensions_menus
+				export_wiki_extensions_settings
+				export_wiki_extensions_tags
+			end
 		end
 
 		def export_wikis
