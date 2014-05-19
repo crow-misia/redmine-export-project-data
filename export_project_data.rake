@@ -98,9 +98,14 @@ namespace :project_data do
 
 		def export_attachments(polymorphic)
 			export_polymorphics polymorphic, Attachment, :container do |attachment|
-				src = Attachment.storage_path + File::SEPARATOR + attachment.disk_filename
-				dest = @att_dir + attachment.disk_filename
-				FileUtils.copy(src, dest) if File.exists?(src)
+				src = attachment.diskfile
+				if attachment.attribute_present?('disk_directory')
+					FileUtils.mkdir_p(File.join(@att_dir, attachment.disk_directory))
+					dest = File.join(@att_dir, attachment.disk_directory, attachment.disk_filename)
+				else
+					dest = File.join(@att_dir, attachment.disk_filename)
+				end
+                                FileUtils.copy(src, dest) if File.exists?(src)
 			end
 		end
 
